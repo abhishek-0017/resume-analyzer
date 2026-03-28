@@ -1,0 +1,77 @@
+body {
+  background: #0f172a;
+  font-family: Arial, sans-serif;
+  color: white;
+  text-align: center;
+}
+
+.App {
+  padding: 40px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 12px;
+  width: 400px;
+  margin: auto;
+  box-shadow: 0px 0px 20px rgba(0,0,0,0.5);
+}
+
+input {
+  color: white;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #2563eb;
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+h4 {
+  margin-top: 15px;
+}
+
+ul {
+  text-align: left;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+/* 🔥 Progress Bar */
+.progress {
+  width: 100%;
+  background: #444;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  height: 12px;
+  background: limegreen;
+}
+
+/* 🎨 Colors */
+.skills {
+  color: lightgreen;
+}
+
+.missing {
+  color: red;
+}
