@@ -2,34 +2,39 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-function Login() {
+function Signup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      const res = await axios.post("http://localhost:5000/api/auth/signup", {
+        name,
         email,
         password,
       });
 
-      // store user
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      alert(res.data.message);
 
-      alert("Login successful ✅");
-
-      // redirect
-      navigate("/dashboard");
+      // redirect to login
+      navigate("/");
 
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed ❌");
+      alert(err.response?.data?.message || "Signup failed ❌");
     }
   };
 
   return (
     <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>Login 🔐</h2>
+      <h2>Signup 📝</h2>
+
+      <input
+        type="text"
+        placeholder="Name"
+        onChange={(e) => setName(e.target.value)}
+      /><br /><br />
 
       <input
         type="email"
@@ -43,13 +48,13 @@ function Login() {
         onChange={(e) => setPassword(e.target.value)}
       /><br /><br />
 
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleSignup}>Signup</button>
 
       <p>
-        Don't have an account? <Link to="/signup">Signup</Link>
+        Already have an account? <Link to="/">Login</Link>
       </p>
     </div>
   );
 }
 
-export default Login;
+export default Signup;
