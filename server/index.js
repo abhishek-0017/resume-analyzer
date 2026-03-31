@@ -1,20 +1,33 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
 
 const app = express();
 
+// ✅ Middleware
 app.use(cors());
 app.use(express.json());
 
-// routes
-app.use("/api/auth", require("./routes/auth"));
-app.use("/api/analyze", require("./routes/analyze"));
-app.use("/api/history", require("./routes/history")); // ✅ NEW
-
+// ✅ MongoDB Connection (FINAL FIX)
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+.then(() => {
+    console.log("MongoDB Connected ✅");
+})
+.catch((err) => {
+    console.error("MongoDB Error ❌:", err.message);
+    process.exit(1); // stop app if DB fails
+});
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+// ✅ Routes (keep your existing routes here if any)
+app.get("/", (req, res) => {
+    res.send("API running");
+});
+
+// ✅ PORT (important for Render)
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});

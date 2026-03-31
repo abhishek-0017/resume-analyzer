@@ -10,12 +10,15 @@ function Dashboard() {
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
 
+  const BASE_URL = "https://your-backend.onrender.com"; // 🔥 REPLACE THIS
+
   useEffect(() => {
     if (!user) navigate("/");
 
-    axios.get(`http://localhost:5000/api/history/${user.email}`)
+    axios.get(`${BASE_URL}/api/history/${user.email}`)
       .then(res => setHistory(res.data))
       .catch(err => console.log(err));
+
   }, []);
 
   const handleAnalyze = async () => {
@@ -30,14 +33,14 @@ function Dashboard() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/analyze",
+        `${BASE_URL}/api/analyze`,
         formData
       );
 
       setResult(res.data);
 
       const historyRes = await axios.get(
-        `http://localhost:5000/api/history/${user.email}`
+        `${BASE_URL}/api/history/${user.email}`
       );
       setHistory(historyRes.data);
 
@@ -55,7 +58,6 @@ function Dashboard() {
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h2>Welcome {user?.name} 👋</h2>
 
-      {/* Upload Section */}
       <div style={cardStyle}>
         <h3>Upload Resume</h3>
         <input type="file" onChange={(e) => setFile(e.target.files[0])} />
@@ -63,7 +65,6 @@ function Dashboard() {
         <button onClick={handleAnalyze}>Analyze Resume</button>
       </div>
 
-      {/* Result Section */}
       {result && (
         <div style={cardStyle}>
           <h2>ATS Score: {result.score}%</h2>
@@ -83,14 +84,13 @@ function Dashboard() {
         </div>
       )}
 
-      {/* History Section */}
       <div style={cardStyle}>
         <h3>Previous Analyses</h3>
 
         {history.map((item, i) => (
-          <div key={i} style={{ marginBottom: "10px" }}>
-            <b>Score:</b> {item.score}% <br />
-            <b>Date:</b> {new Date(item.createdAt).toLocaleString()}
+          <div key={i}>
+            <p><b>Score:</b> {item.score}%</p>
+            <p><b>Date:</b> {new Date(item.createdAt).toLocaleString()}</p>
             <hr />
           </div>
         ))}
@@ -101,7 +101,6 @@ function Dashboard() {
   );
 }
 
-// styles
 const cardStyle = {
   background: "#f9f9f9",
   padding: "20px",
