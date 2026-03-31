@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import OpenAI from "openai";
+import multer from "multer";
+import pdfParse from "pdf-parse";
 
 dotenv.config();
 
@@ -15,22 +17,22 @@ const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// MongoDB
+// MongoDB Connection
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌:", err));
 
-// OpenAI
+// OpenAI Setup
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-// Test route
+// Root Route
 app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 FREE FALLBACK FUNCTION
+// 🔥 FALLBACK FUNCTION (FREE AI)
 function analyzeResumeLocally(text) {
   let suggestions = [];
 
@@ -57,7 +59,12 @@ function analyzeResumeLocally(text) {
   return suggestions.join(" ");
 }
 
-// AI Route
+// 🔥 FILE UPLOAD SETUP
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
+
+// 🔥 TEXT ANALYSIS ROUTE
 app.post("/analyze", async (req, res) => {
   try {
     const { resumeText } = req.body;
@@ -67,7 +74,7 @@ app.post("/analyze", async (req, res) => {
     }
 
     try {
-      // 🔥 TRY OPENAI FIRST
+      // TRY OPENAI
       const response = await openai.responses.create({
         model: "gpt-4o-mini",
         input: `Analyze this resume and give improvement suggestions:\n\n${resumeText}`
@@ -82,7 +89,6 @@ app.post("/analyze", async (req, res) => {
     } catch (error) {
       console.log("OpenAI failed, using fallback...");
 
-      // 🔥 FALLBACK LOGIC
       const localResult = analyzeResumeLocally(resumeText);
 
       return res.json({
@@ -101,7 +107,35 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-// Start server
+// 🔥 PDF UPLOAD + ANALYSIS ROUTE
+app.post("/upload", upload.single("resume"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const pdfData = await pdfParse(req.file.buffer);
+    const text = pdfData.text;
+
+    // Use fallback analysis
+    const result = analyzeResumeLocally(text);
+
+    res.json({
+      success: true,
+      extractedText: text.substring(0, 500),
+      result: result,
+    });
+
+  } catch (error) {
+    console.error("PDF Error ❌:", error);
+    res.status(500).json({
+      success: false,
+      error: "PDF processing failed",
+    });
+  }
+});
+
+// START SERVER
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
