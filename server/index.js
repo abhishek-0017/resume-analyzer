@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import OpenAI from "openai";
 import multer from "multer";
-import pdfParse from "pdf-parse/lib/pdf-parse.js"; // ✅ FINAL FIX
 
 dotenv.config();
 
@@ -17,22 +16,28 @@ const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// MongoDB Connection
+// MongoDB
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌:", err));
 
-// OpenAI setup (optional)
+// OpenAI (optional)
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
+
+// 🔥 FIX FOR PDF-PARSE (Node 22 compatible)
+async function getPdfParse() {
+  const pdfModule = await import("pdf-parse");
+  return pdfModule.default || pdfModule;
+}
 
 // Home route
 app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 Local fallback analysis
+// 🔥 LOCAL FALLBACK ANALYSIS
 function analyzeResumeLocally(text) {
   let suggestions = [];
 
@@ -59,7 +64,7 @@ function analyzeResumeLocally(text) {
   return suggestions.join(" ");
 }
 
-// Multer setup (limit size for Render)
+// Multer setup
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
@@ -108,7 +113,7 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-// 🔥 PDF UPLOAD (FINAL WORKING)
+// 🔥 PDF UPLOAD (FINAL FIXED)
 app.post("/upload", upload.single("resume"), async (req, res) => {
   try {
     console.log("📂 Upload request received");
@@ -125,7 +130,9 @@ app.post("/upload", upload.single("resume"), async (req, res) => {
     let text = "";
 
     try {
+      const pdfParse = await getPdfParse(); // ✅ FINAL FIX
       const pdfData = await pdfParse(req.file.buffer);
+
       text = pdfData.text;
       console.log("✅ PDF parsed successfully");
     } catch (err) {
