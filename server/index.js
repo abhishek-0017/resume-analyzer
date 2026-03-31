@@ -4,10 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import OpenAI from "openai";
 import multer from "multer";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
+import pdfParse from "pdf-parse/lib/pdf-parse.js"; // ✅ FINAL FIX
 
 dotenv.config();
 
@@ -20,12 +17,12 @@ const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// MongoDB
+// MongoDB Connection
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌:", err));
 
-// OpenAI (optional)
+// OpenAI setup (optional)
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
@@ -35,7 +32,7 @@ app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 FALLBACK ANALYSIS
+// 🔥 Local fallback analysis
 function analyzeResumeLocally(text) {
   let suggestions = [];
 
@@ -62,9 +59,10 @@ function analyzeResumeLocally(text) {
   return suggestions.join(" ");
 }
 
-// File upload setup
+// Multer setup (limit size for Render)
 const upload = multer({
   storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
 });
 
 // 🔥 TEXT ANALYSIS
@@ -110,13 +108,12 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-// 🔥 PDF UPLOAD (FINAL FIXED VERSION)
+// 🔥 PDF UPLOAD (FINAL WORKING)
 app.post("/upload", upload.single("resume"), async (req, res) => {
   try {
     console.log("📂 Upload request received");
 
     if (!req.file) {
-      console.log("❌ No file uploaded");
       return res.status(400).json({
         success: false,
         error: "No file uploaded",
@@ -130,7 +127,7 @@ app.post("/upload", upload.single("resume"), async (req, res) => {
     try {
       const pdfData = await pdfParse(req.file.buffer);
       text = pdfData.text;
-      console.log("✅ PDF parsed");
+      console.log("✅ PDF parsed successfully");
     } catch (err) {
       console.log("❌ PDF parse error:", err.message);
 
