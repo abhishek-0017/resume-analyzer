@@ -1,45 +1,75 @@
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
+import OpenAI from "openai";
 
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
+dotenv.config();
 
 const app = express();
 
-// ✅ Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ✅ MongoDB Connection (Robust Version)
-const connectDB = async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is missing in environment variables");
-    }
+// ENV VARIABLES
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+// 🔥 CONNECT TO MONGODB
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("MongoDB Connected ✅"))
+  .catch((err) => console.log("MongoDB Error ❌:", err));
 
-    console.log("MongoDB Connected ✅");
-  } catch (error) {
-    console.error("MongoDB Error ❌:", error.message);
-    process.exit(1); // Stop server if DB fails
-  }
-};
+// 🔥 OPENAI SETUP
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+});
 
-// Call DB connection
-connectDB();
-
-// ✅ Test Route
+// 🔥 TEST ROUTE
 app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// ✅ PORT (Render uses this)
-const PORT = process.env.PORT || 5000;
+// 🔥 AI RESUME ANALYZER ROUTE
+app.post("/analyze", async (req, res) => {
+  try {
+    const { resumeText } = req.body;
 
+    if (!resumeText) {
+      return res.status(400).json({ error: "Resume text is required" });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional resume reviewer.",
+        },
+        {
+          role: "user",
+          content: `Analyze this resume and give detailed improvement suggestions:\n\n${resumeText}`,
+        },
+      ],
+    });
+
+    res.json({
+      success: true,
+      result: response.choices[0].message.content,
+    });
+
+  } catch (error) {
+    console.error("AI Error ❌:", error);
+    res.status(500).json({
+      success: false,
+      error: "Something went wrong with AI",
+    });
+  }
+});
+
+// 🔥 START SERVER
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
