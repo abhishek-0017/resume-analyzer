@@ -4,10 +4,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import OpenAI from "openai";
 import multer from "multer";
+import { createRequire } from "module";
 
-// ✅ FIXED pdf-parse import
-import pkg from "pdf-parse";
-const pdfParse = pkg;
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse");
 
 dotenv.config();
 
@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 FREE FALLBACK ANALYSIS
+// 🔥 FREE FALLBACK
 function analyzeResumeLocally(text) {
   let suggestions = [];
 
@@ -56,7 +56,7 @@ function analyzeResumeLocally(text) {
   }
 
   if (suggestions.length === 0) {
-    suggestions.push("Your resume looks good. Try improving formatting and adding achievements.");
+    suggestions.push("Your resume looks good. Try improving formatting.");
   }
 
   return suggestions.join(" ");
@@ -67,7 +67,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
 });
 
-// 🔥 TEXT ANALYSIS ROUTE
+// TEXT ANALYSIS
 app.post("/analyze", async (req, res) => {
   try {
     const { resumeText } = req.body;
@@ -77,7 +77,6 @@ app.post("/analyze", async (req, res) => {
     }
 
     try {
-      // Try OpenAI
       const response = await openai.responses.create({
         model: "gpt-4o-mini",
         input: `Analyze this resume and give improvement suggestions:\n\n${resumeText}`
@@ -110,7 +109,7 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-// 🔥 PDF UPLOAD + ANALYSIS ROUTE
+// PDF ANALYSIS
 app.post("/upload", upload.single("resume"), async (req, res) => {
   try {
     if (!req.file) {
