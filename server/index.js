@@ -4,7 +4,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import OpenAI from "openai";
 import multer from "multer";
-import pdfParse from "pdf-parse";
+
+// ✅ FIXED pdf-parse import
+import pkg from "pdf-parse";
+const pdfParse = pkg;
 
 dotenv.config();
 
@@ -32,7 +35,7 @@ app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 FALLBACK FUNCTION (FREE AI)
+// 🔥 FREE FALLBACK ANALYSIS
 function analyzeResumeLocally(text) {
   let suggestions = [];
 
@@ -59,7 +62,7 @@ function analyzeResumeLocally(text) {
   return suggestions.join(" ");
 }
 
-// 🔥 FILE UPLOAD SETUP
+// File Upload Setup
 const upload = multer({
   storage: multer.memoryStorage(),
 });
@@ -74,7 +77,7 @@ app.post("/analyze", async (req, res) => {
     }
 
     try {
-      // TRY OPENAI
+      // Try OpenAI
       const response = await openai.responses.create({
         model: "gpt-4o-mini",
         input: `Analyze this resume and give improvement suggestions:\n\n${resumeText}`
@@ -117,7 +120,6 @@ app.post("/upload", upload.single("resume"), async (req, res) => {
     const pdfData = await pdfParse(req.file.buffer);
     const text = pdfData.text;
 
-    // Use fallback analysis
     const result = analyzeResumeLocally(text);
 
     res.json({
