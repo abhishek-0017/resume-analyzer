@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // ENV VARIABLES
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -50,7 +50,7 @@ app.post("/analyze", async (req, res) => {
         },
         {
           role: "user",
-          content: `Analyze this resume and give detailed improvement suggestions:\n\n${resumeText}`,
+          content: `Analyze this resume and give improvement suggestions:\n\n${resumeText}`,
         },
       ],
     });
@@ -69,7 +69,7 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-// 🔥 START SERVER
-app.listen(PORT, () => {
+// 🔥 PORT FIX FOR RENDER
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
