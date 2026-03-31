@@ -8,31 +8,56 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ENV VARIABLES
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// 🔥 CONNECT TO MONGODB
+// MongoDB
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌:", err));
 
-// 🔥 OPENAI SETUP
+// OpenAI
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-// 🔥 TEST ROUTE
+// Test route
 app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 AI RESUME ANALYZER ROUTE
+// 🔥 FREE FALLBACK FUNCTION
+function analyzeResumeLocally(text) {
+  let suggestions = [];
+
+  if (!text.toLowerCase().includes("project")) {
+    suggestions.push("Add at least 2-3 strong projects.");
+  }
+
+  if (!text.toLowerCase().includes("skill")) {
+    suggestions.push("Include a dedicated skills section.");
+  }
+
+  if (!text.toLowerCase().includes("experience")) {
+    suggestions.push("Add internships or practical experience.");
+  }
+
+  if (text.length < 100) {
+    suggestions.push("Resume content is too short. Add more details.");
+  }
+
+  if (suggestions.length === 0) {
+    suggestions.push("Your resume looks good. Try improving formatting and adding achievements.");
+  }
+
+  return suggestions.join(" ");
+}
+
+// AI Route
 app.post("/analyze", async (req, res) => {
   try {
     const { resumeText } = req.body;
@@ -41,35 +66,42 @@ app.post("/analyze", async (req, res) => {
       return res.status(400).json({ error: "Resume text is required" });
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are a professional resume reviewer.",
-        },
-        {
-          role: "user",
-          content: `Analyze this resume and give improvement suggestions:\n\n${resumeText}`,
-        },
-      ],
-    });
+    try {
+      // 🔥 TRY OPENAI FIRST
+      const response = await openai.responses.create({
+        model: "gpt-4o-mini",
+        input: `Analyze this resume and give improvement suggestions:\n\n${resumeText}`
+      });
 
-    res.json({
-      success: true,
-      result: response.choices[0].message.content,
-    });
+      return res.json({
+        success: true,
+        source: "AI",
+        result: response.output[0].content[0].text,
+      });
+
+    } catch (error) {
+      console.log("OpenAI failed, using fallback...");
+
+      // 🔥 FALLBACK LOGIC
+      const localResult = analyzeResumeLocally(resumeText);
+
+      return res.json({
+        success: true,
+        source: "Fallback",
+        result: localResult,
+      });
+    }
 
   } catch (error) {
-    console.error("AI Error ❌:", error);
+    console.error("Server Error ❌:", error);
     res.status(500).json({
       success: false,
-      error: "Something went wrong with AI",
+      error: "Server error",
     });
   }
 });
 
-// 🔥 PORT FIX FOR RENDER
+// Start server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
