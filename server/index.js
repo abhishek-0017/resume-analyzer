@@ -20,22 +20,22 @@ const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-// MongoDB Connection
+// MongoDB
 mongoose.connect(MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.log("MongoDB Error ❌:", err));
 
-// OpenAI Setup
+// OpenAI (optional)
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-// Root Route
+// Home route
 app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
 
-// 🔥 FREE FALLBACK
+// 🔥 FALLBACK ANALYSIS
 function analyzeResumeLocally(text) {
   let suggestions = [];
 
@@ -56,18 +56,18 @@ function analyzeResumeLocally(text) {
   }
 
   if (suggestions.length === 0) {
-    suggestions.push("Your resume looks good. Try improving formatting.");
+    suggestions.push("Your resume looks good. Improve formatting and achievements.");
   }
 
   return suggestions.join(" ");
 }
 
-// File Upload Setup
+// File upload setup
 const upload = multer({
   storage: multer.memoryStorage(),
 });
 
-// TEXT ANALYSIS
+// 🔥 TEXT ANALYSIS
 app.post("/analyze", async (req, res) => {
   try {
     const { resumeText } = req.body;
@@ -89,19 +89,20 @@ app.post("/analyze", async (req, res) => {
       });
 
     } catch (error) {
-      console.log("OpenAI failed, using fallback...");
+      console.log("OpenAI failed → using fallback");
 
-      const localResult = analyzeResumeLocally(resumeText);
+      const result = analyzeResumeLocally(resumeText);
 
       return res.json({
         success: true,
         source: "Fallback",
-        result: localResult,
+        result,
       });
     }
 
   } catch (error) {
-    console.error("Server Error ❌:", error);
+    console.error("Analyze Error ❌:", error);
+
     res.status(500).json({
       success: false,
       error: "Server error",
@@ -109,34 +110,61 @@ app.post("/analyze", async (req, res) => {
   }
 });
 
-// PDF ANALYSIS
+// 🔥 PDF UPLOAD (FINAL FIXED VERSION)
 app.post("/upload", upload.single("resume"), async (req, res) => {
   try {
+    console.log("📂 Upload request received");
+
     if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+      console.log("❌ No file uploaded");
+      return res.status(400).json({
+        success: false,
+        error: "No file uploaded",
+      });
     }
 
-    const pdfData = await pdfParse(req.file.buffer);
-    const text = pdfData.text;
+    console.log("📄 File:", req.file.originalname);
+
+    let text = "";
+
+    try {
+      const pdfData = await pdfParse(req.file.buffer);
+      text = pdfData.text;
+      console.log("✅ PDF parsed");
+    } catch (err) {
+      console.log("❌ PDF parse error:", err.message);
+
+      return res.status(500).json({
+        success: false,
+        error: "Failed to read PDF. Try another file.",
+      });
+    }
+
+    if (!text || text.length < 20) {
+      return res.status(400).json({
+        success: false,
+        error: "PDF has no readable content",
+      });
+    }
 
     const result = analyzeResumeLocally(text);
 
-    res.json({
+    return res.json({
       success: true,
-      extractedText: text.substring(0, 500),
-      result: result,
+      result,
     });
 
   } catch (error) {
-    console.error("PDF Error ❌:", error);
-    res.status(500).json({
+    console.error("🔥 Upload Error:", error);
+
+    return res.status(500).json({
       success: false,
-      error: "PDF processing failed",
+      error: "Server error in upload",
     });
   }
 });
 
-// START SERVER
+// Start server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
