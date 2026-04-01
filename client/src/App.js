@@ -1,83 +1,95 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 function App() {
   const [resumeText, setResumeText] = useState("");
   const [file, setFile] = useState(null);
   const [result, setResult] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // TEXT ANALYSIS
-  const handleAnalyze = async () => {
-    setLoading(true);
+  // 🔹 TEXT ANALYSIS
+  const handleTextAnalyze = async () => {
+    setResult("Analyzing... ⏳");
 
-    const res = await fetch("https://resume-analyzer-backend-9dde.onrender.com/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ resumeText }),
-    });
+    try {
+      const response = await fetch(
+        "https://resume-analyzer-backend-9dde.onrender.com/analyze-text",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: resumeText }),
+        }
+      );
 
-    const data = await res.json();
-    setResult(data.result);
-    setLoading(false);
+      const data = await response.json();
+      setResult(data.analysis);
+    } catch (error) {
+      console.error(error);
+      setResult("Error analyzing text ❌");
+    }
   };
 
-  // PDF ANALYSIS
-  const handleUpload = async () => {
-    if (!file) return alert("Please select a PDF");
+  // 🔹 PDF ANALYSIS
+  const handleFileUpload = async () => {
+    if (!file) {
+      alert("Please upload a PDF first!");
+      return;
+    }
 
-    setLoading(true);
+    setResult("Analyzing PDF... ⏳");
 
     const formData = new FormData();
     formData.append("resume", file);
 
-    const res = await fetch("https://resume-analyzer-backend-9dde.onrender.com/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const response = await fetch(
+        "https://resume-analyzer-backend-9dde.onrender.com/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-    const data = await res.json();
-    setResult(data.result);
-    setLoading(false);
+      const data = await response.json();
+      setResult(data.analysis);
+    } catch (error) {
+      console.error(error);
+      setResult("Error analyzing PDF ❌");
+    }
   };
 
   return (
-    <div style={{ padding: "30px", fontFamily: "Arial" }}>
+    <div style={{ padding: "20px" }}>
       <h1>AI Resume Analyzer 🚀</h1>
 
-      {/* TEXT SECTION */}
+      {/* TEXT INPUT */}
       <h3>Paste Resume</h3>
       <textarea
-        rows="8"
+        rows="10"
         cols="60"
-        placeholder="Paste your resume here..."
         value={resumeText}
         onChange={(e) => setResumeText(e.target.value)}
       />
-
-      <br /><br />
-      <button onClick={handleAnalyze}>Analyze Text</button>
+      <br />
+      <button onClick={handleTextAnalyze}>Analyze Text</button>
 
       <hr />
 
-      {/* PDF SECTION */}
+      {/* PDF INPUT */}
       <h3>Upload PDF Resume</h3>
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-
-      <br /><br />
-      <button onClick={handleUpload}>Analyze PDF</button>
+      <input
+        type="file"
+        accept="application/pdf"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
+      <br />
+      <button onClick={handleFileUpload}>Analyze PDF</button>
 
       <hr />
 
       {/* RESULT */}
       <h2>Result:</h2>
-
-      {loading ? (
-        <p>Analyzing... ⏳</p>
-      ) : (
-        <p>{result}</p>
-      )}
+      <p>{result}</p>
     </div>
   );
 }

@@ -1,115 +1,89 @@
 import express from "express";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import multer from "multer";
-
-import pdfParse from "pdf-parse/lib/pdf-parse.js"; // ✅ CORRECT FIX
+import pdfParse from "pdf-parse";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
+const upload = multer();
 
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 10000;
-const MONGO_URI = process.env.MONGO_URI;
+// 🔹 TEXT ANALYSIS ROUTE
+app.post("/analyze-text", (req, res) => {
+  try {
+    const { text } = req.body;
 
-// MongoDB
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("MongoDB Connected ✅"))
-  .catch((err) => console.log("MongoDB Error ❌:", err));
+    if (!text) {
+      return res.status(400).json({ error: "No text provided" });
+    }
 
-// Home route
-app.get("/", (req, res) => {
-  res.send("API running 🚀");
+    let suggestions = [];
+
+    if (!text.toLowerCase().includes("project")) {
+      suggestions.push("Add at least 2-3 strong projects.");
+    }
+
+    if (!text.toLowerCase().includes("skill")) {
+      suggestions.push("Include a skills section.");
+    }
+
+    if (!text.toLowerCase().includes("experience")) {
+      suggestions.push("Add internships or experience.");
+    }
+
+    res.json({
+      analysis: suggestions.join(" "),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Text analysis failed" });
+  }
 });
 
-// Resume analyzer
-function analyzeResumeLocally(text) {
-  let suggestions = [];
-
-  if (!text.toLowerCase().includes("project")) {
-    suggestions.push("Add at least 2-3 strong projects.");
-  }
-
-  if (!text.toLowerCase().includes("skill")) {
-    suggestions.push("Include a skills section.");
-  }
-
-  if (!text.toLowerCase().includes("experience")) {
-    suggestions.push("Add internships or experience.");
-  }
-
-  if (text.length < 100) {
-    suggestions.push("Resume content is too short.");
-  }
-
-  if (suggestions.length === 0) {
-    suggestions.push("Resume looks good. Improve formatting.");
-  }
-
-  return suggestions.join(" ");
-}
-
-// Multer
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 },
-});
-
-// 🔥 FINAL PDF ROUTE
+// 🔹 PDF ANALYSIS ROUTE
 app.post("/upload", upload.single("resume"), async (req, res) => {
   try {
     console.log("📂 Upload request received");
 
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: "No file uploaded" });
+    const pdfBuffer = req.file.buffer;
+    const data = await pdfParse(pdfBuffer);
+
+    console.log("📄 PDF parsed successfully");
+
+    const text = data.text.toLowerCase();
+
+    let suggestions = [];
+
+    if (!text.includes("project")) {
+      suggestions.push("Add at least 2-3 strong projects.");
     }
 
-    console.log("📄 File:", req.file.originalname);
-
-    let text = "";
-
-    try {
-      const data = await pdfParse(req.file.buffer);
-      text = data.text;
-      console.log("✅ PDF parsed successfully");
-    } catch (err) {
-      console.log("❌ PDF parse error:", err.message);
-
-      return res.status(500).json({
-        success: false,
-        error: "Failed to parse PDF",
-      });
+    if (!text.includes("skill")) {
+      suggestions.push("Include a skills section.");
     }
 
-    if (!text || text.length < 20) {
-      return res.status(400).json({
-        success: false,
-        error: "PDF has no readable content",
-      });
+    if (!text.includes("experience")) {
+      suggestions.push("Add internships or experience.");
     }
 
-    const result = analyzeResumeLocally(text);
-
-    return res.json({
-      success: true,
-      result,
+    res.json({
+      analysis: suggestions.join(" "),
     });
-
   } catch (error) {
-    console.error("🔥 Upload Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      error: "Server error",
-    });
+    console.error(error);
+    res.status(500).json({ error: "PDF analysis failed" });
   }
 });
 
-// Start server
-app.listen(PORT, "0.0.0.0", () => {
+app.get("/", (req, res) => {
+  res.send("Server Running ✅");
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
