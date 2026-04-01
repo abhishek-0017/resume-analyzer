@@ -5,12 +5,12 @@ function App() {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState("");
 
-  // 🔹 TEXT ANALYSIS
+  // ✅ TEXT ANALYSIS
   const handleTextAnalyze = async () => {
-    setResult("Analyzing... ⏳");
+    setResult("Analyzing Text... ⏳");
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         "https://resume-analyzer-backend-9dde.onrender.com/analyze-text",
         {
           method: "POST",
@@ -21,18 +21,20 @@ function App() {
         }
       );
 
-      const data = await response.json();
-      setResult(data.analysis);
-    } catch (error) {
-      console.error(error);
+      const data = await res.json();
+      console.log("TEXT RESPONSE:", data);
+
+      setResult(data.analysis || "No result returned ❌");
+    } catch (err) {
+      console.error(err);
       setResult("Error analyzing text ❌");
     }
   };
 
-  // 🔹 PDF ANALYSIS
+  // ✅ PDF ANALYSIS
   const handleFileUpload = async () => {
     if (!file) {
-      alert("Please upload a PDF first!");
+      alert("Upload PDF first!");
       return;
     }
 
@@ -42,7 +44,7 @@ function App() {
     formData.append("resume", file);
 
     try {
-      const response = await fetch(
+      const res = await fetch(
         "https://resume-analyzer-backend-9dde.onrender.com/upload",
         {
           method: "POST",
@@ -50,10 +52,12 @@ function App() {
         }
       );
 
-      const data = await response.json();
-      setResult(data.analysis);
-    } catch (error) {
-      console.error(error);
+      const data = await res.json();
+      console.log("PDF RESPONSE:", data);
+
+      setResult(data.analysis || "No result returned ❌");
+    } catch (err) {
+      console.error(err);
       setResult("Error analyzing PDF ❌");
     }
   };
@@ -62,7 +66,7 @@ function App() {
     <div style={{ padding: "20px" }}>
       <h1>AI Resume Analyzer 🚀</h1>
 
-      {/* TEXT INPUT */}
+      {/* TEXT */}
       <h3>Paste Resume</h3>
       <textarea
         rows="10"
@@ -75,7 +79,7 @@ function App() {
 
       <hr />
 
-      {/* PDF INPUT */}
+      {/* PDF */}
       <h3>Upload PDF Resume</h3>
       <input
         type="file"
@@ -89,7 +93,15 @@ function App() {
 
       {/* RESULT */}
       <h2>Result:</h2>
-      <p>{result}</p>
+      <div
+        style={{
+          border: "1px solid black",
+          padding: "10px",
+          minHeight: "50px",
+        }}
+      >
+        {result}
+      </div>
     </div>
   );
 }
