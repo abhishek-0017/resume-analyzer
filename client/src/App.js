@@ -2,10 +2,11 @@ import React, { useState } from "react";
 
 function App() {
   const [resumeText, setResumeText] = useState("");
+  const [jobDesc, setJobDesc] = useState("");
   const [file, setFile] = useState(null);
   const [result, setResult] = useState("");
 
-  // ✅ TEXT ANALYSIS
+  // TEXT ANALYSIS
   const handleTextAnalyze = async () => {
     setResult("Analyzing Text... ⏳");
 
@@ -14,29 +15,21 @@ function App() {
         "https://resume-analyzer-backend-9dde.onrender.com/analyze-text",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: resumeText }),
         }
       );
 
       const data = await res.json();
-      console.log("TEXT RESPONSE:", data);
-
-      setResult(data.analysis || "No result returned ❌");
-    } catch (err) {
-      console.error(err);
-      setResult("Error analyzing text ❌");
+      setResult(data.analysis);
+    } catch {
+      setResult("Error ❌");
     }
   };
 
-  // ✅ PDF ANALYSIS
+  // PDF ANALYSIS
   const handleFileUpload = async () => {
-    if (!file) {
-      alert("Upload PDF first!");
-      return;
-    }
+    if (!file) return alert("Upload PDF first!");
 
     setResult("Analyzing PDF... ⏳");
 
@@ -53,12 +46,30 @@ function App() {
       );
 
       const data = await res.json();
-      console.log("PDF RESPONSE:", data);
+      setResult(data.analysis);
+    } catch {
+      setResult("Error ❌");
+    }
+  };
 
-      setResult(data.analysis || "No result returned ❌");
-    } catch (err) {
-      console.error(err);
-      setResult("Error analyzing PDF ❌");
+  // JOB MATCH
+  const handleJobMatch = async () => {
+    setResult("Matching Job... ⏳");
+
+    try {
+      const res = await fetch(
+        "https://resume-analyzer-backend-9dde.onrender.com/match-job",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resumeText, jobDesc }),
+        }
+      );
+
+      const data = await res.json();
+      setResult(data.analysis);
+    } catch {
+      setResult("Error ❌");
     }
   };
 
@@ -69,7 +80,7 @@ function App() {
       {/* TEXT */}
       <h3>Paste Resume</h3>
       <textarea
-        rows="10"
+        rows="8"
         cols="60"
         value={resumeText}
         onChange={(e) => setResumeText(e.target.value)}
@@ -83,7 +94,6 @@ function App() {
       <h3>Upload PDF Resume</h3>
       <input
         type="file"
-        accept="application/pdf"
         onChange={(e) => setFile(e.target.files[0])}
       />
       <br />
@@ -91,15 +101,22 @@ function App() {
 
       <hr />
 
+      {/* JOB MATCH */}
+      <h3>Paste Job Description</h3>
+      <textarea
+        rows="8"
+        cols="60"
+        value={jobDesc}
+        onChange={(e) => setJobDesc(e.target.value)}
+      />
+      <br />
+      <button onClick={handleJobMatch}>Match Job</button>
+
+      <hr />
+
       {/* RESULT */}
       <h2>Result:</h2>
-      <div
-        style={{
-          border: "1px solid black",
-          padding: "10px",
-          minHeight: "50px",
-        }}
-      >
+      <div style={{ border: "1px solid black", padding: "10px" }}>
         {result}
       </div>
     </div>

@@ -22,7 +22,6 @@ function analyzeResume(text) {
   let suggestions = [];
   let found = [];
 
-  // ✅ Skills
   if (text.includes("java") || text.includes("python") || text.includes("sql")) {
     score += 20;
     found.push("Skills");
@@ -30,31 +29,27 @@ function analyzeResume(text) {
     suggestions.push("Add technical skills like Java, Python, SQL.");
   }
 
-  // ✅ Projects
   if (text.includes("project")) {
     score += 25;
     found.push("Projects");
   } else {
-    suggestions.push("Add 2-3 strong projects with proper description.");
+    suggestions.push("Add 2-3 strong projects.");
   }
 
-  // ✅ Experience
   if (text.includes("experience") || text.includes("internship")) {
     score += 25;
     found.push("Experience");
   } else {
-    suggestions.push("Add internships or work experience.");
+    suggestions.push("Add internships or experience.");
   }
 
-  // ✅ Education
   if (text.includes("mca") || text.includes("btech")) {
     score += 15;
     found.push("Education");
   } else {
-    suggestions.push("Clearly mention your education.");
+    suggestions.push("Mention education clearly.");
   }
 
-  // ✅ Achievements
   if (
     text.includes("%") ||
     text.includes("improved") ||
@@ -63,28 +58,45 @@ function analyzeResume(text) {
     score += 15;
     found.push("Achievements");
   } else {
-    suggestions.push(
-      "Add measurable achievements (e.g., increased performance by 30%)."
-    );
+    suggestions.push("Add measurable achievements.");
   }
 
-  return {
-    score,
-    found,
-    suggestions,
-  };
+  return { score, found, suggestions };
 }
 
 /* =========================
-   🔹 TEXT ANALYSIS ROUTE
+   🔥 JOB MATCH FUNCTION
+========================= */
+function matchJob(resumeText, jobDesc) {
+  const resume = resumeText.toLowerCase();
+  const job = jobDesc.toLowerCase();
+
+  const keywords = ["java", "python", "sql", "react", "node", "aws"];
+
+  let matchCount = 0;
+  let missing = [];
+
+  keywords.forEach((skill) => {
+    if (job.includes(skill)) {
+      if (resume.includes(skill)) {
+        matchCount++;
+      } else {
+        missing.push(skill);
+      }
+    }
+  });
+
+  let score = Math.round((matchCount / keywords.length) * 100);
+
+  return { score, missing };
+}
+
+/* =========================
+   🔹 TEXT ANALYSIS
 ========================= */
 app.post("/analyze-text", (req, res) => {
   try {
     const { text } = req.body;
-
-    if (!text) {
-      return res.status(400).json({ error: "No text provided" });
-    }
 
     const result = analyzeResume(text);
 
@@ -98,21 +110,19 @@ Suggestions:
 - ${result.suggestions.join("\n- ")}
       `,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
     res.status(500).json({ error: "Text analysis failed" });
   }
 });
 
 /* =========================
-   🔹 PDF ANALYSIS ROUTE
+   🔹 PDF ANALYSIS
 ========================= */
 app.post("/upload", upload.single("resume"), async (req, res) => {
   try {
     console.log("📂 Upload request received");
 
-    const pdfBuffer = req.file.buffer;
-    const data = await pdfParse(pdfBuffer);
+    const data = await pdfParse(req.file.buffer);
 
     console.log("📄 PDF parsed successfully");
 
@@ -128,22 +138,39 @@ Suggestions:
 - ${result.suggestions.join("\n- ")}
       `,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "PDF analysis failed" });
   }
 });
 
 /* =========================
-   🔹 ROOT
+   🔥 JOB MATCH ROUTE
 ========================= */
+app.post("/match-job", (req, res) => {
+  try {
+    const { resumeText, jobDesc } = req.body;
+
+    const result = matchJob(resumeText, jobDesc);
+
+    res.json({
+      analysis: `
+Match Score: ${result.score}%
+
+Missing Skills:
+- ${result.missing.join("\n- ") || "None"}
+      `,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Job match failed" });
+  }
+});
+
+/* ========================= */
 app.get("/", (req, res) => {
   res.send("Server Running ✅");
 });
 
-/* =========================
-   🔹 START SERVER
-========================= */
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
