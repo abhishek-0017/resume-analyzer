@@ -10,7 +10,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* ---------- MULTER FIX ---------- */
 const upload = multer({ storage: multer.memoryStorage() });
 
 /* ---------- ANALYZE FUNCTION ---------- */
@@ -51,7 +50,32 @@ This resume has been optimized to improve clarity, impact, and ATS compatibility
 `;
 }
 
-/* ---------- PDF UPLOAD (FIXED) ---------- */
+/* ---------- JOB MATCHING FUNCTION ---------- */
+function matchJobs(text) {
+  const lower = text.toLowerCase();
+
+  let jobs = [];
+
+  if (lower.includes("react") || lower.includes("html") || lower.includes("css")) {
+    jobs.push({ role: "Frontend Developer", match: 85 });
+  }
+
+  if (lower.includes("node") || lower.includes("express") || lower.includes("mongodb")) {
+    jobs.push({ role: "Backend Developer", match: 80 });
+  }
+
+  if (lower.includes("python") || lower.includes("pandas") || lower.includes("analysis")) {
+    jobs.push({ role: "Data Analyst", match: 75 });
+  }
+
+  if (jobs.length === 0) {
+    jobs.push({ role: "General Software Engineer", match: 60 });
+  }
+
+  return jobs;
+}
+
+/* ---------- PDF UPLOAD ---------- */
 app.post("/upload", upload.any(), async (req, res) => {
   try {
     console.log("📂 Upload request received");
@@ -68,10 +92,12 @@ app.post("/upload", upload.any(), async (req, res) => {
     console.log("📄 PDF parsed successfully");
 
     const result = analyzeResume(text);
+    const jobs = matchJobs(text);
 
     res.json({
       text,
       analysis: result,
+      jobs,
     });
   } catch (err) {
     console.error("❌ PDF ERROR:", err);
@@ -85,16 +111,18 @@ app.post("/analyze-text", (req, res) => {
     const { text } = req.body;
 
     const result = analyzeResume(text);
+    const jobs = matchJobs(text);
 
     res.json({
       analysis: result,
+      jobs,
     });
   } catch (err) {
     res.status(500).json({ error: "Text analysis failed" });
   }
 });
 
-/* ---------- REWRITE ROUTE ---------- */
+/* ---------- REWRITE ---------- */
 app.post("/rewrite", (req, res) => {
   try {
     const { text } = req.body;

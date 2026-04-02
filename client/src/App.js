@@ -7,9 +7,9 @@ function App() {
 
   const BACKEND_URL = "https://resume-analyzer-backend-9dde.onrender.com";
 
-  /* ---------- PDF ANALYSIS ---------- */
+  /* ---------- PDF ---------- */
   const handleFileUpload = async () => {
-    if (!file) return alert("Upload a PDF");
+    if (!file) return alert("Upload PDF");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -25,36 +25,42 @@ function App() {
       const data = await res.json();
 
       setResult(
-        `Score: ${data.analysis.score}\n\nSuggestions:\n- ${data.analysis.suggestions.join(
-          "\n- "
-        )}`
+        `Score: ${data.analysis.score}
+
+Suggestions:
+- ${data.analysis.suggestions.join("\n- ")}
+
+Best Job Matches:
+${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
       );
-    } catch (err) {
-      setResult("Error analyzing PDF ❌");
+    } catch {
+      setResult("Error ❌");
     }
   };
 
-  /* ---------- TEXT ANALYSIS ---------- */
+  /* ---------- TEXT ---------- */
   const handleTextAnalyze = async () => {
     setResult("Analyzing Text... ⏳");
 
     try {
       const res = await fetch(`${BACKEND_URL}/analyze-text`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: resumeText }),
       });
 
       const data = await res.json();
 
       setResult(
-        `Score: ${data.analysis.score}\n\nSuggestions:\n- ${data.analysis.suggestions.join(
-          "\n- "
-        )}`
+        `Score: ${data.analysis.score}
+
+Suggestions:
+- ${data.analysis.suggestions.join("\n- ")}
+
+Best Job Matches:
+${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
       );
-    } catch (err) {
+    } catch {
       setResult("Error ❌");
     }
   };
@@ -66,16 +72,14 @@ function App() {
     try {
       const res = await fetch(`${BACKEND_URL}/rewrite`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: resumeText }),
       });
 
       const data = await res.json();
 
       setResult(data.analysis);
-    } catch (err) {
+    } catch {
       setResult("Error ❌");
     }
   };
@@ -84,14 +88,12 @@ function App() {
     <div style={{ padding: "30px", fontFamily: "Arial" }}>
       <h1>🚀 AI Resume Analyzer</h1>
 
-      {/* PDF Upload */}
       <input type="file" onChange={(e) => setFile(e.target.files[0])} />
       <br />
       <button onClick={handleFileUpload}>Analyze PDF</button>
 
       <hr />
 
-      {/* Text Input */}
       <textarea
         rows="6"
         cols="50"
