@@ -6,8 +6,9 @@ const API_URL = "https://resume-analyzer-backend-9dde.onrender.com";
 function App() {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
-  const [result, setResult] = useState("");
+  const [result, setResult] = useState(null);
 
+  // TEXT ANALYSIS
   const handleTextAnalyze = async () => {
     try {
       const res = await fetch(`${API_URL}/analyze-text`, {
@@ -19,12 +20,13 @@ function App() {
       });
 
       const data = await res.json();
-      setResult(data.aiFeedback);
+      setResult(data);
     } catch {
-      setResult("Error analyzing text");
+      setResult({ feedback: "Error analyzing text" });
     }
   };
 
+  // PDF ANALYSIS
   const handleFileUpload = async () => {
     try {
       const formData = new FormData();
@@ -36,16 +38,16 @@ function App() {
       });
 
       const data = await res.json();
-      setResult(data.aiFeedback);
+      setResult(data);
     } catch {
-      setResult("Error analyzing PDF");
+      setResult({ feedback: "Error analyzing PDF" });
     }
   };
 
   return (
     <div className="container">
       <h1>AI Resume Analyzer</h1>
-      <p className="subtitle">Get instant resume feedback</p>
+      <p className="subtitle">Smart ATS Resume Checker</p>
 
       <div className="card">
         <h3>Upload Resume (PDF)</h3>
@@ -65,7 +67,21 @@ function App() {
 
       <div className="card result">
         <h3>Results</h3>
-        <pre>{result}</pre>
+
+        {result && (
+          <>
+            <h2>ATS Score: {result.score}/100</h2>
+
+            <div className="progress-bar">
+              <div
+                className="progress"
+                style={{ width: `${result.score}%` }}
+              ></div>
+            </div>
+
+            <pre>{result.feedback}</pre>
+          </>
+        )}
       </div>
     </div>
   );
