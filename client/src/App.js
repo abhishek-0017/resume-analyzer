@@ -20,7 +20,12 @@ function App() {
       });
 
       const data = await res.json();
-      setResult(JSON.stringify(data, null, 2));
+
+      setResult(
+        `ATS Score: ${data.atsScore}\n\nMatched Skills: ${data.matchedKeywords.join(
+          ", "
+        )}\n\nSuggestion: ${data.suggestions}`
+      );
     } catch (error) {
       setResult("Error analyzing text");
     }
@@ -38,7 +43,12 @@ function App() {
       });
 
       const data = await res.json();
-      setResult(JSON.stringify(data, null, 2));
+
+      setResult(
+        `ATS Score: ${data.atsScore}\n\nMatched Skills: ${data.matchedKeywords.join(
+          ", "
+        )}\n\nSuggestion: ${data.suggestions}`
+      );
     } catch (error) {
       setResult("Error analyzing PDF");
     }
