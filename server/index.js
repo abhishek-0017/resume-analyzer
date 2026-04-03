@@ -10,36 +10,48 @@ app.use(express.json());
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ✅ FAKE AI FUNCTION (WORKS ALWAYS)
+// ✅ ATS + FEEDBACK FUNCTION
 function generateFeedback(text) {
-  let feedback = "";
+  let score = 0;
+  let feedback = [];
 
   if (text.toLowerCase().includes("project")) {
-    feedback += "✅ Good: You have mentioned projects.\n";
+    score += 25;
+    feedback.push("✅ Projects section is present");
   } else {
-    feedback += "❌ Add projects section.\n";
+    feedback.push("❌ Add projects section");
   }
 
   if (text.length > 300) {
-    feedback += "✅ Resume length is good.\n";
+    score += 25;
+    feedback.push("✅ Resume length is good");
   } else {
-    feedback += "❌ Resume is too short.\n";
+    feedback.push("❌ Resume is too short");
   }
 
   if (text.toLowerCase().includes("python")) {
-    feedback += "✅ Python skill detected.\n";
+    score += 25;
+    feedback.push("✅ Python skill detected");
   } else {
-    feedback += "❌ Add technical skills like Python.\n";
+    feedback.push("❌ Add technical skills like Python");
   }
 
-  feedback += "\n⭐ Suggestion:\nAdd measurable achievements and improve formatting.";
+  if (text.toLowerCase().includes("experience")) {
+    score += 25;
+    feedback.push("✅ Experience section found");
+  } else {
+    feedback.push("❌ Add experience section");
+  }
 
-  return feedback;
+  return {
+    score,
+    feedback: feedback.join("\n"),
+  };
 }
 
 // TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("Backend working perfectly 🚀");
+  res.send("Backend working 🚀");
 });
 
 // ✅ TEXT ANALYSIS
@@ -47,11 +59,12 @@ app.post("/analyze-text", (req, res) => {
   try {
     const { text } = req.body;
 
-    const feedback = generateFeedback(text);
+    const result = generateFeedback(text);
 
     res.json({
       success: true,
-      aiFeedback: feedback,
+      score: result.score,
+      feedback: result.feedback,
     });
   } catch (error) {
     res.status(500).json({ error: "Text analysis failed" });
@@ -63,11 +76,12 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const data = await pdfParse(req.file.buffer);
 
-    const feedback = generateFeedback(data.text);
+    const result = generateFeedback(data.text);
 
     res.json({
       success: true,
-      aiFeedback: feedback,
+      score: result.score,
+      feedback: result.feedback,
     });
   } catch (error) {
     res.status(500).json({ error: "PDF analysis failed" });
