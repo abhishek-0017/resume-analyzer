@@ -10,14 +10,16 @@ app.use(express.json());
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 🔥 COMMON KEYWORDS
+// 🔥 IMPROVED KEYWORDS
 const keywords = [
   "python", "java", "c++", "react", "node", "mongodb",
   "sql", "machine learning", "data structures",
-  "algorithms", "communication", "teamwork"
+  "algorithms", "communication", "teamwork",
+  "data", "analytics", "modeling", "warehouse",
+  "etl", "big data", "cloud", "api"
 ];
 
-// ✅ ANALYSIS FUNCTION
+// 🔥 MAIN FUNCTION
 function analyzeResume(text, jobDesc = "") {
   let score = 0;
   let feedback = [];
@@ -25,7 +27,7 @@ function analyzeResume(text, jobDesc = "") {
   text = text.toLowerCase();
   jobDesc = jobDesc.toLowerCase();
 
-  // Basic scoring
+  // ATS SCORE
   if (text.includes("project")) score += 25;
   else feedback.push("❌ Add projects section");
 
@@ -38,23 +40,26 @@ function analyzeResume(text, jobDesc = "") {
   if (text.includes("skill")) score += 25;
   else feedback.push("❌ Add skills section");
 
-  // 🔥 JOB MATCHING
+  // 🔥 JOB MATCHING FIXED
   let matchCount = 0;
   let missing = [];
 
-  keywords.forEach((word) => {
-    if (jobDesc.includes(word)) {
-      if (text.includes(word)) {
-        matchCount++;
-      } else {
-        missing.push(word);
-      }
+  const relevantKeywords = keywords.filter(word =>
+    jobDesc.includes(word)
+  );
+
+  relevantKeywords.forEach(word => {
+    if (text.includes(word)) {
+      matchCount++;
+    } else {
+      missing.push(word);
     }
   });
 
-  const matchPercent = jobDesc
-    ? Math.round((matchCount / keywords.length) * 100)
-    : 0;
+  const matchPercent =
+    relevantKeywords.length > 0
+      ? Math.round((matchCount / relevantKeywords.length) * 100)
+      : 0;
 
   return {
     score,
@@ -64,12 +69,12 @@ function analyzeResume(text, jobDesc = "") {
   };
 }
 
-// TEST ROUTE
+// TEST
 app.get("/", (req, res) => {
-  res.send("Backend running 🚀");
+  res.send("Backend working");
 });
 
-// TEXT ANALYSIS
+// TEXT
 app.post("/analyze-text", (req, res) => {
   try {
     const { text, jobDesc } = req.body;
@@ -78,11 +83,11 @@ app.post("/analyze-text", (req, res) => {
 
     res.json(result);
   } catch {
-    res.status(500).json({ error: "Text analysis failed" });
+    res.status(500).json({ error: "Text failed" });
   }
 });
 
-// PDF ANALYSIS
+// PDF
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const jobDesc = req.body.jobDesc || "";
@@ -93,7 +98,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 
     res.json(result);
   } catch {
-    res.status(500).json({ error: "PDF analysis failed" });
+    res.status(500).json({ error: "PDF failed" });
   }
 });
 
