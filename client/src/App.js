@@ -8,8 +8,6 @@ function App() {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState("");
 
-
-  // ✅ TEXT ANALYSIS (AI)
   const handleTextAnalyze = async () => {
     try {
       const res = await fetch(`${API_URL}/analyze-text`, {
@@ -21,17 +19,12 @@ function App() {
       });
 
       const data = await res.json();
-
-      // 🔥 SHOW AI RESPONSE
-      setResult(data.aiFeedback || "No response from AI");
-
-    } catch (error) {
+      setResult(data.aiFeedback);
+    } catch {
       setResult("Error analyzing text");
     }
   };
 
-
-  // ✅ PDF ANALYSIS (AI)
   const handleFileUpload = async () => {
     try {
       const formData = new FormData();
@@ -43,41 +36,37 @@ function App() {
       });
 
       const data = await res.json();
-
-      // 🔥 SHOW AI RESPONSE
-      setResult(data.aiFeedback || "No response from AI");
-
-    } catch (error) {
+      setResult(data.aiFeedback);
+    } catch {
       setResult("Error analyzing PDF");
     }
   };
 
-
   return (
-    <div className="App">
+    <div className="container">
       <h1>AI Resume Analyzer</h1>
-      <p>Get AI-powered feedback on your resume</p>
+      <p className="subtitle">Get instant resume feedback</p>
 
-      <h3>Upload PDF</h3>
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-      <br /><br />
-      <button onClick={handleFileUpload}>Analyze PDF</button>
+      <div className="card">
+        <h3>Upload Resume (PDF)</h3>
+        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+        <button onClick={handleFileUpload}>Analyze PDF</button>
+      </div>
 
-      <h3>Or Paste Text</h3>
-      <textarea
-        rows="6"
-        cols="50"
-        placeholder="Paste your resume text here..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-      <br /><br />
-      <button onClick={handleTextAnalyze}>Analyze Text</button>
+      <div className="card">
+        <h3>Or Paste Resume Text</h3>
+        <textarea
+          placeholder="Paste your resume here..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button onClick={handleTextAnalyze}>Analyze Text</button>
+      </div>
 
-      <h3>Results</h3>
-      <pre style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
-        {result}
-      </pre>
+      <div className="card result">
+        <h3>Results</h3>
+        <pre>{result}</pre>
+      </div>
     </div>
   );
 }
