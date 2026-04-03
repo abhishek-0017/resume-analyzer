@@ -5,49 +5,52 @@ const API_URL = "https://resume-analyzer-backend-9dde.onrender.com";
 
 function App() {
   const [text, setText] = useState("");
+  const [jobDesc, setJobDesc] = useState("");
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
 
   // TEXT ANALYSIS
   const handleTextAnalyze = async () => {
-    try {
-      const res = await fetch(`${API_URL}/analyze-text`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text }),
-      });
+    const res = await fetch(`${API_URL}/analyze-text`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, jobDesc }),
+    });
 
-      const data = await res.json();
-      setResult(data);
-    } catch {
-      setResult({ feedback: "Error analyzing text" });
-    }
+    const data = await res.json();
+    setResult(data);
   };
 
   // PDF ANALYSIS
   const handleFileUpload = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("jobDesc", jobDesc);
 
-      const res = await fetch(`${API_URL}/upload`, {
-        method: "POST",
-        body: formData,
-      });
+    const res = await fetch(`${API_URL}/upload`, {
+      method: "POST",
+      body: formData,
+    });
 
-      const data = await res.json();
-      setResult(data);
-    } catch {
-      setResult({ feedback: "Error analyzing PDF" });
-    }
+    const data = await res.json();
+    setResult(data);
   };
 
   return (
     <div className="container">
       <h1>AI Resume Analyzer</h1>
-      <p className="subtitle">Smart ATS Resume Checker</p>
+      <p className="subtitle">ATS + Job Matching System</p>
+
+      <div className="card">
+        <h3>Paste Job Description</h3>
+        <textarea
+          placeholder="Paste job description..."
+          value={jobDesc}
+          onChange={(e) => setJobDesc(e.target.value)}
+        />
+      </div>
 
       <div className="card">
         <h3>Upload Resume (PDF)</h3>
@@ -58,7 +61,7 @@ function App() {
       <div className="card">
         <h3>Or Paste Resume Text</h3>
         <textarea
-          placeholder="Paste your resume here..."
+          placeholder="Paste resume here..."
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -78,6 +81,18 @@ function App() {
                 style={{ width: `${result.score}%` }}
               ></div>
             </div>
+
+            <h2>Job Match: {result.matchPercent}%</h2>
+
+            <div className="progress-bar">
+              <div
+                className="progress"
+                style={{ width: `${result.matchPercent}%`, background: "#ff9800" }}
+              ></div>
+            </div>
+
+            <h4>Missing Keywords:</h4>
+            <p>{result.missing.join(", ") || "None 🎉"}</p>
 
             <pre>{result.feedback}</pre>
           </>
