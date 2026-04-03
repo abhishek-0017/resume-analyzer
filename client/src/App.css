@@ -1,9 +1,11 @@
+/* Base */
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #f4f6f8;
 }
 
+/* Layout */
 .container {
   max-width: 700px;
   margin: auto;
@@ -13,60 +15,84 @@ body {
 
 .subtitle {
   color: #666;
+  margin-bottom: 20px;
 }
 
+/* Cards */
 .card {
   background: white;
   padding: 20px;
   margin: 15px 0;
   border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
+/* Inputs */
 textarea {
   width: 100%;
   height: 120px;
   margin-top: 10px;
   padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
+input[type="file"] {
+  margin-top: 10px;
+}
+
+/* Button */
 button {
   margin-top: 10px;
-  padding: 10px;
+  padding: 10px 20px;
+  border: none;
   background: #007bff;
   color: white;
-  border: none;
+  border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 button:hover {
   background: #0056b3;
 }
 
-/* 🔥 FIXED PROGRESS BAR */
+/* Result */
+.result pre {
+  text-align: left;
+  white-space: pre-wrap;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* 🔥 PROGRESS BAR (FINAL FIXED) */
 .progress-bar {
   width: 100%;
-  height: 20px;
+  height: 22px;
   background: #ddd;
-  border-radius: 10px;
+  border-radius: 12px;
   margin: 10px 0;
   overflow: hidden;
+  position: relative;
 }
 
 .progress {
   height: 100%;
-  width: 0%;
-  transition: width 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  transition: width 0.6s ease-in-out;
 }
 
+/* Colors */
 .green {
   background: #28a745;
 }
 
 .orange {
   background: #ff9800;
-}
-
-.result pre {
-  text-align: left;
-  white-space: pre-wrap;
 }
