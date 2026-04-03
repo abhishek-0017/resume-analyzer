@@ -5,99 +5,72 @@ const pdfParse = require("pdf-parse");
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// File upload setup
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
-});
+// ✅ FAKE AI FUNCTION (WORKS ALWAYS)
+function generateFeedback(text) {
+  let feedback = "";
 
-// 🔥 FUNCTION: ATS CALCULATION
-function calculateATS(text) {
-  const keywords = [
-    "python",
-    "java",
-    "react",
-    "node",
-    "sql",
-    "mongodb",
-    "machine learning",
-    "data structures",
-    "algorithms",
-    "api",
-  ];
+  if (text.toLowerCase().includes("project")) {
+    feedback += "✅ Good: You have mentioned projects.\n";
+  } else {
+    feedback += "❌ Add projects section.\n";
+  }
 
-  let score = 0;
-  let foundKeywords = [];
+  if (text.length > 300) {
+    feedback += "✅ Resume length is good.\n";
+  } else {
+    feedback += "❌ Resume is too short.\n";
+  }
 
-  keywords.forEach((word) => {
-    if (text.toLowerCase().includes(word)) {
-      score += 10;
-      foundKeywords.push(word);
-    }
-  });
+  if (text.toLowerCase().includes("python")) {
+    feedback += "✅ Python skill detected.\n";
+  } else {
+    feedback += "❌ Add technical skills like Python.\n";
+  }
 
-  return {
-    score: Math.min(score, 100),
-    foundKeywords,
-  };
+  feedback += "\n⭐ Suggestion:\nAdd measurable achievements and improve formatting.";
+
+  return feedback;
 }
 
-// ✅ TEXT ANALYSIS WITH ATS
+// TEST ROUTE
+app.get("/", (req, res) => {
+  res.send("Backend working perfectly 🚀");
+});
+
+// ✅ TEXT ANALYSIS
 app.post("/analyze-text", (req, res) => {
   try {
     const { text } = req.body;
 
-    if (!text) {
-      return res.status(400).json({ error: "No text provided" });
-    }
-
-    const ats = calculateATS(text);
+    const feedback = generateFeedback(text);
 
     res.json({
       success: true,
-      message: "Text analyzed successfully",
-      atsScore: ats.score,
-      matchedKeywords: ats.foundKeywords,
-      suggestions:
-        ats.score < 50
-          ? "Add more technical skills like Python, React, SQL, APIs"
-          : "Good resume, but can still improve with more project details",
+      aiFeedback: feedback,
     });
   } catch (error) {
-    res.status(500).json({ error: "Error analyzing text" });
+    res.status(500).json({ error: "Text analysis failed" });
   }
 });
 
-// ✅ PDF ANALYSIS WITH ATS
+// ✅ PDF ANALYSIS
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
     const data = await pdfParse(req.file.buffer);
-    const ats = calculateATS(data.text);
+
+    const feedback = generateFeedback(data.text);
 
     res.json({
       success: true,
-      message: "PDF analyzed successfully",
-      atsScore: ats.score,
-      matchedKeywords: ats.foundKeywords,
-      suggestions:
-        ats.score < 50
-          ? "Improve your resume by adding key technical skills"
-          : "Strong resume!",
-      preview: data.text.substring(0, 300),
+      aiFeedback: feedback,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error analyzing PDF" });
+    res.status(500).json({ error: "PDF analysis failed" });
   }
 });
 
