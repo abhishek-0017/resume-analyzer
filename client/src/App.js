@@ -26,7 +26,9 @@ function App() {
       `Score: ${data.analysis.score}
 
 Suggestions:
-- ${data.analysis.suggestions.join("\n- ")}
+${data.analysis.suggestions.length > 0
+  ? data.analysis.suggestions.map(s => `- ${s}`).join("\n")
+  : "No major issues found 🎉"}
 
 Best Job Matches:
 ${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
@@ -38,7 +40,9 @@ ${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
 
     const res = await fetch(`${BACKEND_URL}/analyze-text`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ text: resumeText }),
     });
 
@@ -48,7 +52,9 @@ ${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
       `Score: ${data.analysis.score}
 
 Suggestions:
-- ${data.analysis.suggestions.join("\n- ")}
+${data.analysis.suggestions.length > 0
+  ? data.analysis.suggestions.map(s => `- ${s}`).join("\n")
+  : "No major issues found 🎉"}
 
 Best Job Matches:
 ${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
@@ -60,7 +66,9 @@ ${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
 
     const res = await fetch(`${BACKEND_URL}/rewrite`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ text: resumeText }),
     });
 
@@ -70,65 +78,113 @@ ${data.jobs.map(j => `- ${j.role} (${j.match}%)`).join("\n")}`
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">
-        🚀 AI Resume Analyzer
-      </h1>
+    <div style={styles.container}>
+      <h1 style={styles.title}>🚀 AI Resume Analyzer</h1>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div style={styles.grid}>
         
         {/* LEFT PANEL */}
-        <div className="bg-gray-800 p-5 rounded-2xl shadow-lg">
-          <h2 className="text-xl mb-4">Upload Resume</h2>
+        <div style={styles.card}>
+          <h2>Upload Resume</h2>
 
           <input
             type="file"
             onChange={(e) => setFile(e.target.files[0])}
-            className="mb-3"
           />
 
-          <button
-            onClick={handleFileUpload}
-            className="bg-blue-500 px-4 py-2 rounded-xl hover:bg-blue-600"
-          >
+          <button style={styles.button} onClick={handleFileUpload}>
             Analyze PDF
           </button>
 
-          <hr className="my-4 border-gray-600" />
+          <hr />
 
           <textarea
             rows="6"
-            className="w-full p-2 text-black rounded"
             placeholder="Paste resume text..."
+            style={styles.textarea}
             onChange={(e) => setResumeText(e.target.value)}
           ></textarea>
 
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={handleTextAnalyze}
-              className="bg-green-500 px-4 py-2 rounded-xl hover:bg-green-600"
-            >
+          <div>
+            <button style={styles.buttonGreen} onClick={handleTextAnalyze}>
               Analyze Text
             </button>
 
-            <button
-              onClick={handleRewrite}
-              className="bg-purple-500 px-4 py-2 rounded-xl hover:bg-purple-600"
-            >
+            <button style={styles.buttonPurple} onClick={handleRewrite}>
               Improve Resume
             </button>
           </div>
         </div>
 
         {/* RIGHT PANEL */}
-        <div className="bg-gray-800 p-5 rounded-2xl shadow-lg">
-          <h2 className="text-xl mb-4">Results</h2>
-
-          <pre className="whitespace-pre-wrap text-sm">{result}</pre>
+        <div style={styles.card}>
+          <h2>Results</h2>
+          <pre style={styles.result}>{result}</pre>
         </div>
+
       </div>
     </div>
   );
 }
+
+/* ---------- STYLES ---------- */
+const styles = {
+  container: {
+    padding: "30px",
+    fontFamily: "Arial",
+    backgroundColor: "#f4f6f8",
+    minHeight: "100vh",
+  },
+  title: {
+    textAlign: "center",
+  },
+  grid: {
+    display: "flex",
+    gap: "20px",
+    marginTop: "20px",
+  },
+  card: {
+    flex: 1,
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "10px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+  },
+  textarea: {
+    width: "100%",
+    padding: "10px",
+    marginTop: "10px",
+  },
+  button: {
+    display: "block",
+    marginTop: "10px",
+    padding: "10px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  buttonGreen: {
+    marginTop: "10px",
+    marginRight: "10px",
+    padding: "10px",
+    background: "green",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+  },
+  buttonPurple: {
+    marginTop: "10px",
+    padding: "10px",
+    background: "purple",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+  },
+  result: {
+    whiteSpace: "pre-wrap",
+  },
+};
 
 export default App;
