@@ -8,7 +8,8 @@ function App() {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState("");
 
-  // ✅ TEXT ANALYSIS
+
+  // ✅ TEXT ANALYSIS (AI)
   const handleTextAnalyze = async () => {
     try {
       const res = await fetch(`${API_URL}/analyze-text`, {
@@ -21,17 +22,16 @@ function App() {
 
       const data = await res.json();
 
-      setResult(
-        `ATS Score: ${data.atsScore}\n\nMatched Skills: ${data.matchedKeywords.join(
-          ", "
-        )}\n\nSuggestion: ${data.suggestions}`
-      );
+      // 🔥 SHOW AI RESPONSE
+      setResult(data.aiFeedback || "No response from AI");
+
     } catch (error) {
       setResult("Error analyzing text");
     }
   };
 
-  // ✅ PDF ANALYSIS
+
+  // ✅ PDF ANALYSIS (AI)
   const handleFileUpload = async () => {
     try {
       const formData = new FormData();
@@ -44,20 +44,19 @@ function App() {
 
       const data = await res.json();
 
-      setResult(
-        `ATS Score: ${data.atsScore}\n\nMatched Skills: ${data.matchedKeywords.join(
-          ", "
-        )}\n\nSuggestion: ${data.suggestions}`
-      );
+      // 🔥 SHOW AI RESPONSE
+      setResult(data.aiFeedback || "No response from AI");
+
     } catch (error) {
       setResult("Error analyzing PDF");
     }
   };
 
+
   return (
     <div className="App">
       <h1>AI Resume Analyzer</h1>
-      <p>Optimize your resume for ATS and recruiters</p>
+      <p>Get AI-powered feedback on your resume</p>
 
       <h3>Upload PDF</h3>
       <input type="file" onChange={(e) => setFile(e.target.files[0])} />
@@ -68,6 +67,7 @@ function App() {
       <textarea
         rows="6"
         cols="50"
+        placeholder="Paste your resume text here..."
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
@@ -75,7 +75,9 @@ function App() {
       <button onClick={handleTextAnalyze}>Analyze Text</button>
 
       <h3>Results</h3>
-      <pre>{result}</pre>
+      <pre style={{ whiteSpace: "pre-wrap", textAlign: "left" }}>
+        {result}
+      </pre>
     </div>
   );
 }
