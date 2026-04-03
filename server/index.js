@@ -1,111 +1,66 @@
-import express from "express";
-import cors from "cors";
-import multer from "multer";
-import pdfParse from "pdf-parse";
-import dotenv from "dotenv";
-import OpenAI from "openai";
-
-dotenv.config();
+const express = require("express");
+const multer = require("multer");
+const cors = require("cors");
+const pdfParse = require("pdf-parse");
 
 const app = express();
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
+// Multer setup
 const upload = multer({ storage: multer.memoryStorage() });
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Test route
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
 });
 
-/* ---------- AI ANALYSIS ---------- */
-async function analyzeResumeAI(text) {
-  const prompt = `
-Analyze this resume and give:
-
-1. ATS Score out of 100
-2. Strengths
-3. Weaknesses
-4. Improvements
-
-Resume:
-${text}
-`;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  return response.choices[0].message.content;
-}
-
-/* ---------- JOB MATCHING ---------- */
-function matchJobs(text) {
-  const lower = text.toLowerCase();
-  let jobs = [];
-
-  if (lower.includes("react")) jobs.push({ role: "Frontend Developer", match: 85 });
-  if (lower.includes("node")) jobs.push({ role: "Backend Developer", match: 80 });
-  if (lower.includes("python")) jobs.push({ role: "Data Analyst", match: 75 });
-
-  if (jobs.length === 0) {
-    jobs.push({ role: "Software Engineer", match: 60 });
-  }
-
-  return jobs;
-}
-
-/* ---------- PDF ---------- */
-app.post("/upload", upload.any(), async (req, res) => {
-  try {
-    const file = req.files[0];
-    const data = await pdfParse(file.buffer);
-    const text = data.text;
-
-    const aiResult = await analyzeResumeAI(text);
-    const jobs = matchJobs(text);
-
-    res.json({ analysis: aiResult, jobs });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "PDF error" });
-  }
-});
-
-/* ---------- TEXT ---------- */
-app.post("/analyze-text", async (req, res) => {
+// ✅ TEXT ANALYSIS
+app.post("/analyze-text", (req, res) => {
   try {
     const { text } = req.body;
 
-    const aiResult = await analyzeResumeAI(text);
-    const jobs = matchJobs(text);
+    if (!text) {
+      return res.status(400).json({ error: "No text provided" });
+    }
 
-    res.json({ analysis: aiResult, jobs });
-  } catch (err) {
-    res.status(500).json({ error: "Text error" });
-  }
-});
+    const wordCount = text.trim().split(/\s+/).length;
 
-/* ---------- REWRITE ---------- */
-app.post("/rewrite", async (req, res) => {
-  try {
-    const { text } = req.body;
-
-    const prompt = `Improve this resume:\n${text}`;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
+    res.json({
+      success: true,
+      message: "Text analyzed successfully",
+      wordCount: wordCount,
+      preview: text.substring(0, 200),
     });
+  } catch (error) {
+    res.status(500).json({ error: "Error analyzing text" });
+  }
+});
 
-    res.json({ analysis: response.choices[0].message.content });
-  } catch {
-    res.status(500).json({ error: "Rewrite error" });
+// ✅ PDF ANALYSIS (IMPORTANT: field name = file)
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const data = await pdfParse(req.file.buffer);
+
+    res.json({
+      success: true,
+      message: "PDF analyzed successfully",
+      text: data.text.substring(0, 500),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error analyzing PDF" });
   }
 });
 
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-  console.log("🚀 Server running");
+  console.log(`Server running on port ${PORT}`);
 });
