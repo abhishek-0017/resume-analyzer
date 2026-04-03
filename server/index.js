@@ -17,7 +17,38 @@ app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
 
-// ✅ TEXT ANALYSIS
+// 🔥 FUNCTION: ATS CALCULATION
+function calculateATS(text) {
+  const keywords = [
+    "python",
+    "java",
+    "react",
+    "node",
+    "sql",
+    "mongodb",
+    "machine learning",
+    "data structures",
+    "algorithms",
+    "api",
+  ];
+
+  let score = 0;
+  let foundKeywords = [];
+
+  keywords.forEach((word) => {
+    if (text.toLowerCase().includes(word)) {
+      score += 10;
+      foundKeywords.push(word);
+    }
+  });
+
+  return {
+    score: Math.min(score, 100),
+    foundKeywords,
+  };
+}
+
+// ✅ TEXT ANALYSIS WITH ATS
 app.post("/analyze-text", (req, res) => {
   try {
     const { text } = req.body;
@@ -26,20 +57,24 @@ app.post("/analyze-text", (req, res) => {
       return res.status(400).json({ error: "No text provided" });
     }
 
-    const wordCount = text.trim().split(/\s+/).length;
+    const ats = calculateATS(text);
 
     res.json({
       success: true,
       message: "Text analyzed successfully",
-      wordCount: wordCount,
-      preview: text.substring(0, 200)
+      atsScore: ats.score,
+      matchedKeywords: ats.foundKeywords,
+      suggestions:
+        ats.score < 50
+          ? "Add more technical skills like Python, React, SQL, APIs"
+          : "Good resume, but can still improve with more project details",
     });
   } catch (error) {
     res.status(500).json({ error: "Error analyzing text" });
   }
 });
 
-// ✅ PDF ANALYSIS
+// ✅ PDF ANALYSIS WITH ATS
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -47,11 +82,18 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     }
 
     const data = await pdfParse(req.file.buffer);
+    const ats = calculateATS(data.text);
 
     res.json({
       success: true,
       message: "PDF analyzed successfully",
-      text: data.text.substring(0, 500)
+      atsScore: ats.score,
+      matchedKeywords: ats.foundKeywords,
+      suggestions:
+        ats.score < 50
+          ? "Improve your resume by adding key technical skills"
+          : "Strong resume!",
+      preview: data.text.substring(0, 300),
     });
   } catch (error) {
     console.error(error);
