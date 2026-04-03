@@ -10,80 +10,89 @@ app.use(express.json());
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ✅ ATS + FEEDBACK FUNCTION
-function generateFeedback(text) {
+// 🔥 COMMON KEYWORDS
+const keywords = [
+  "python", "java", "c++", "react", "node", "mongodb",
+  "sql", "machine learning", "data structures",
+  "algorithms", "communication", "teamwork"
+];
+
+// ✅ ANALYSIS FUNCTION
+function analyzeResume(text, jobDesc = "") {
   let score = 0;
   let feedback = [];
 
-  if (text.toLowerCase().includes("project")) {
-    score += 25;
-    feedback.push("✅ Projects section is present");
-  } else {
-    feedback.push("❌ Add projects section");
-  }
+  text = text.toLowerCase();
+  jobDesc = jobDesc.toLowerCase();
 
-  if (text.length > 300) {
-    score += 25;
-    feedback.push("✅ Resume length is good");
-  } else {
-    feedback.push("❌ Resume is too short");
-  }
+  // Basic scoring
+  if (text.includes("project")) score += 25;
+  else feedback.push("❌ Add projects section");
 
-  if (text.toLowerCase().includes("python")) {
-    score += 25;
-    feedback.push("✅ Python skill detected");
-  } else {
-    feedback.push("❌ Add technical skills like Python");
-  }
+  if (text.length > 300) score += 25;
+  else feedback.push("❌ Resume too short");
 
-  if (text.toLowerCase().includes("experience")) {
-    score += 25;
-    feedback.push("✅ Experience section found");
-  } else {
-    feedback.push("❌ Add experience section");
-  }
+  if (text.includes("experience")) score += 25;
+  else feedback.push("❌ Add experience");
+
+  if (text.includes("skill")) score += 25;
+  else feedback.push("❌ Add skills section");
+
+  // 🔥 JOB MATCHING
+  let matchCount = 0;
+  let missing = [];
+
+  keywords.forEach((word) => {
+    if (jobDesc.includes(word)) {
+      if (text.includes(word)) {
+        matchCount++;
+      } else {
+        missing.push(word);
+      }
+    }
+  });
+
+  const matchPercent = jobDesc
+    ? Math.round((matchCount / keywords.length) * 100)
+    : 0;
 
   return {
     score,
     feedback: feedback.join("\n"),
+    matchPercent,
+    missing,
   };
 }
 
 // TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("Backend working 🚀");
+  res.send("Backend running 🚀");
 });
 
-// ✅ TEXT ANALYSIS
+// TEXT ANALYSIS
 app.post("/analyze-text", (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, jobDesc } = req.body;
 
-    const result = generateFeedback(text);
+    const result = analyzeResume(text, jobDesc);
 
-    res.json({
-      success: true,
-      score: result.score,
-      feedback: result.feedback,
-    });
-  } catch (error) {
+    res.json(result);
+  } catch {
     res.status(500).json({ error: "Text analysis failed" });
   }
 });
 
-// ✅ PDF ANALYSIS
+// PDF ANALYSIS
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
+    const jobDesc = req.body.jobDesc || "";
+
     const data = await pdfParse(req.file.buffer);
 
-    const result = generateFeedback(data.text);
+    const result = analyzeResume(data.text, jobDesc);
 
-    res.json({
-      success: true,
-      score: result.score,
-      feedback: result.feedback,
-    });
-  } catch (error) {
+    res.json(result);
+  } catch {
     res.status(500).json({ error: "PDF analysis failed" });
   }
 });
