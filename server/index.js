@@ -10,7 +10,7 @@ app.use(express.json());
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// 🔥 IMPROVED KEYWORDS
+// 🔥 KEYWORDS
 const keywords = [
   "python", "java", "c++", "react", "node", "mongodb",
   "sql", "machine learning", "data structures",
@@ -19,7 +19,7 @@ const keywords = [
   "etl", "big data", "cloud", "api"
 ];
 
-// 🔥 MAIN FUNCTION
+// 🔥 ANALYSIS FUNCTION
 function analyzeResume(text, jobDesc = "") {
   let score = 0;
   let feedback = [];
@@ -29,7 +29,7 @@ function analyzeResume(text, jobDesc = "") {
 
   // ATS SCORE
   if (text.includes("project")) score += 25;
-  else feedback.push("❌ Add projects section");
+  else feedback.push("❌ Add projects");
 
   if (text.length > 300) score += 25;
   else feedback.push("❌ Resume too short");
@@ -38,9 +38,9 @@ function analyzeResume(text, jobDesc = "") {
   else feedback.push("❌ Add experience");
 
   if (text.includes("skill")) score += 25;
-  else feedback.push("❌ Add skills section");
+  else feedback.push("❌ Add skills");
 
-  // 🔥 JOB MATCHING FIXED
+  // JOB MATCHING
   let matchCount = 0;
   let missing = [];
 
@@ -49,11 +49,8 @@ function analyzeResume(text, jobDesc = "") {
   );
 
   relevantKeywords.forEach(word => {
-    if (text.includes(word)) {
-      matchCount++;
-    } else {
-      missing.push(word);
-    }
+    if (text.includes(word)) matchCount++;
+    else missing.push(word);
   });
 
   const matchPercent =
@@ -65,39 +62,42 @@ function analyzeResume(text, jobDesc = "") {
     score,
     feedback: feedback.join("\n"),
     matchPercent,
-    missing,
+    missing
   };
 }
 
-// TEST
+// TEST ROUTE
 app.get("/", (req, res) => {
   res.send("Backend working");
 });
 
-// TEXT
+// TEXT ROUTE
 app.post("/analyze-text", (req, res) => {
   try {
     const { text, jobDesc } = req.body;
-
     const result = analyzeResume(text, jobDesc);
-
     res.json(result);
   } catch {
     res.status(500).json({ error: "Text failed" });
   }
 });
 
-// PDF
+// PDF ROUTE (🔥 IMPORTANT FIXED)
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const jobDesc = req.body.jobDesc || "";
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
     const data = await pdfParse(req.file.buffer);
 
     const result = analyzeResume(data.text, jobDesc);
 
     res.json(result);
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "PDF failed" });
   }
 });
