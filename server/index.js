@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Multer setup
+// File upload setup
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Test route
@@ -32,14 +32,14 @@ app.post("/analyze-text", (req, res) => {
       success: true,
       message: "Text analyzed successfully",
       wordCount: wordCount,
-      preview: text.substring(0, 200),
+      preview: text.substring(0, 200)
     });
   } catch (error) {
     res.status(500).json({ error: "Error analyzing text" });
   }
 });
 
-// ✅ PDF ANALYSIS (IMPORTANT: field name = file)
+// ✅ PDF ANALYSIS
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
@@ -51,7 +51,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     res.json({
       success: true,
       message: "PDF analyzed successfully",
-      text: data.text.substring(0, 500),
+      text: data.text.substring(0, 500)
     });
   } catch (error) {
     console.error(error);
