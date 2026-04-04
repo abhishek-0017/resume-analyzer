@@ -27,8 +27,7 @@ Backend: https://resume-analyzer-backend-9dde.onrender.com
 - Resume scoring using NLP models
 
 ## Demo
-
-![demo png](https://github.com/user-attachments/assets/48c70f77-1d1c-4198-a462-7c9548799cc6)
+![demo png](https://github.com/user-attachments/assets/1f30521d-d05f-4875-9f07-f5e426ca2ec9)
 
 ---
 
