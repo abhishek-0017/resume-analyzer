@@ -1,4 +1,4 @@
-# AI Resume Analyzer 
+![demo png](https://github.com/user-attachments/assets/910f4d6b-39aa-43fd-907b-241f0e6dccd2)# AI Resume Analyzer 
 
 A full-stack web application that analyzes resumes using ATS (Applicant Tracking System) logic and matches them against job descriptions.
 
@@ -25,6 +25,10 @@ Backend: https://resume-analyzer-backend-9dde.onrender.com
 - Designing ATS scoring logic
 - Building full-stack deployed applications
 - Resume scoring using NLP models
+
+## Demo
+
+![demo png](https://github.com/user-attachments/assets/48c70f77-1d1c-4198-a462-7c9548799cc6)
 
 ---
 
