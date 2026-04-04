@@ -1,4 +1,4 @@
-![demo png](https://github.com/user-attachments/assets/910f4d6b-39aa-43fd-907b-241f0e6dccd2)# AI Resume Analyzer 
+# AI Resume Analyzer 
 
 A full-stack web application that analyzes resumes using ATS (Applicant Tracking System) logic and matches them against job descriptions.
 
