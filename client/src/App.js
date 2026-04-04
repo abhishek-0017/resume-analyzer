@@ -6,12 +6,15 @@ function App() {
   const [jobDesc, setJobDesc] = useState("");
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const API_URL = "https://resume-analyzer-backend-9dde.onrender.com";
 
-  // TEXT ANALYSIS
+  // TEXT
   const handleTextAnalyze = async () => {
     try {
+      setLoading(true);
+
       const res = await fetch(`${API_URL}/analyze-text`, {
         method: "POST",
         headers: {
@@ -24,10 +27,12 @@ function App() {
       setResult(data);
     } catch {
       alert("Error analyzing text");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // PDF ANALYSIS (🔥 FIXED)
+  // PDF
   const handlePDFAnalyze = async () => {
     if (!file) {
       alert("Upload PDF first");
@@ -35,8 +40,10 @@ function App() {
     }
 
     try {
+      setLoading(true);
+
       const formData = new FormData();
-      formData.append("file", file); // ✅ MUST be "file"
+      formData.append("file", file);
       formData.append("jobDesc", jobDesc);
 
       const res = await fetch(`${API_URL}/upload`, {
@@ -48,13 +55,15 @@ function App() {
       setResult(data);
     } catch {
       alert("Error analyzing PDF");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="container">
       <h1>AI Resume Analyzer</h1>
-      <p className="subtitle">ATS + Job Matching System</p>
+      <p>ATS + Job Matching System</p>
 
       {/* JOB DESC */}
       <div className="card">
@@ -69,7 +78,9 @@ function App() {
       <div className="card">
         <h3>Upload Resume (PDF)</h3>
         <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={handlePDFAnalyze}>Analyze PDF</button>
+        <button onClick={handlePDFAnalyze}>
+          {loading ? "Analyzing..." : "Analyze PDF"}
+        </button>
       </div>
 
       {/* TEXT */}
@@ -79,7 +90,9 @@ function App() {
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <button onClick={handleTextAnalyze}>Analyze Text</button>
+        <button onClick={handleTextAnalyze}>
+          {loading ? "Analyzing..." : "Analyze Text"}
+        </button>
       </div>
 
       {/* RESULT */}
@@ -115,6 +128,14 @@ function App() {
           </p>
 
           <pre>{result.feedback}</pre>
+        </div>
+      )}
+
+      {/* 🔥 SHOW EXTRACTED TEXT */}
+      {result && result.text && (
+        <div className="card">
+          <h3>Extracted Resume Text</h3>
+          <pre>{result.text.substring(0, 800)}...</pre>
         </div>
       )}
     </div>

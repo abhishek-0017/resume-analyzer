@@ -19,7 +19,7 @@ const keywords = [
   "etl", "big data", "cloud", "api"
 ];
 
-// 🔥 ANALYSIS FUNCTION
+// 🔥 IMPROVED ANALYSIS
 function analyzeResume(text, jobDesc = "") {
   let score = 0;
   let feedback = [];
@@ -27,20 +27,23 @@ function analyzeResume(text, jobDesc = "") {
   text = text.toLowerCase();
   jobDesc = jobDesc.toLowerCase();
 
-  // ATS SCORE
-  if (text.includes("project")) score += 25;
+  // ✅ REALISTIC ATS SCORING
+  if (text.includes("project")) score += 20;
   else feedback.push("❌ Add projects");
 
-  if (text.length > 300) score += 25;
+  if (text.includes("intern") || text.includes("experience")) score += 20;
+  else feedback.push("❌ Add experience/internships");
+
+  if (text.includes("skill")) score += 20;
+  else feedback.push("❌ Add skills section");
+
+  if (text.length > 500) score += 20;
   else feedback.push("❌ Resume too short");
 
-  if (text.includes("experience")) score += 25;
-  else feedback.push("❌ Add experience");
+  if (text.includes("education")) score += 20;
+  else feedback.push("❌ Add education");
 
-  if (text.includes("skill")) score += 25;
-  else feedback.push("❌ Add skills");
-
-  // JOB MATCHING
+  // ✅ KEYWORD MATCHING
   let matchCount = 0;
   let missing = [];
 
@@ -48,30 +51,40 @@ function analyzeResume(text, jobDesc = "") {
     jobDesc.includes(word)
   );
 
+  // ⚠️ Handle weak job description
+  if (relevantKeywords.length < 2) {
+    return {
+      score,
+      feedback: "⚠️ Job description too vague",
+      matchPercent: 0,
+      missing: []
+    };
+  }
+
   relevantKeywords.forEach(word => {
     if (text.includes(word)) matchCount++;
     else missing.push(word);
   });
 
-  const matchPercent =
-    relevantKeywords.length > 0
-      ? Math.round((matchCount / relevantKeywords.length) * 100)
-      : 0;
+  const matchPercent = Math.round(
+    (matchCount / relevantKeywords.length) * 100
+  );
 
   return {
     score,
     feedback: feedback.join("\n"),
     matchPercent,
-    missing
+    missing,
+    text // 🔥 send extracted text to frontend
   };
 }
 
-// TEST ROUTE
+// TEST
 app.get("/", (req, res) => {
   res.send("Backend working");
 });
 
-// TEXT ROUTE
+// TEXT
 app.post("/analyze-text", (req, res) => {
   try {
     const { text, jobDesc } = req.body;
@@ -82,7 +95,7 @@ app.post("/analyze-text", (req, res) => {
   }
 });
 
-// PDF ROUTE (🔥 IMPORTANT FIXED)
+// PDF
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const jobDesc = req.body.jobDesc || "";
